@@ -899,7 +899,7 @@ function TOOL:BuildCPanelCustom()
                         VLighT:SetText(tool.Signal.Routes[i].Lights or "")
                         VLighT:SetTooltip(Lenses_Route_Des)
                         function VLighT:OnLoseFocus()
-                            local cleanValue = self:GetValue():gsub("[^%d%-]", "")
+                            local cleanValue = self:GetValue():gsub("[^%d%-b]", "")
                             self:SetText(cleanValue)
                             tool.Signal.Routes[i].Lights = cleanValue
                             tool:SendSettings()
