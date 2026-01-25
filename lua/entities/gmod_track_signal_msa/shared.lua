@@ -1,18 +1,4 @@
-if game.GetMap() ~= "gm_metro_minsk_1984" then 
-	if game.GetMap() ~= "gm_metro_u1" then
-		if game.GetMap() ~= "gm_metro_u5" then
-			if game.GetMap() ~= "gm_metro_u6" then
-				if game.GetMap() ~= "gm_berlin_u55" then
-					if game.GetMap() ~= "gm_metro_ndr_val_v2r1" then
-						timer.Simple(1, function()  
-							scripted_ents.Alias ("gmod_track_signal", "gmod_track_signal_msa")
-						end)
-					else return end
-				else return end
-			else return end
-		else return end
-	else return end
-else return end
+if checkMSAblacklist() then return end
 ENT.Type			= "anim"
 ENT.PrintName		= "Signalling Element"
 ENT.Category		= "Metrostroi (utility)"
@@ -78,7 +64,7 @@ ENT.Routes = {
 ]]
 ENT.AutostopModel = {
 	"models/metrostroi/signals/mus/autostop.mdl",
-	Vector(41,-0.5,1.5)
+	Vector(41,-10.5,1.5)
 }
 
 ENT.OldRouteNumberSetup = {
@@ -91,6 +77,14 @@ ENT.OldRouteNumberSetup = {
 		Q=0,Z=1
 	},
 	{["F"]=1,["L"]=3,["R"]=1,W=4,k=5,d=2},
+}
+ENT.NewRouteNumberSetup = {
+	["0"] = 1,  ["1"] = 2,  ["2"] = 4,  ["3"] = 6,  ["4"] = 7,
+	["5"] = 8,  ["6"] = 9,  ["7"] = 10, ["8"] = 11, ["9"] = 12,
+	A = 13, B = 14, V = 26, G = 18, D = 15,
+	E = 16, I = 19, K = 20, M = 22, N = 23,
+	P = 24, F = 17, R = 25, L = 21,
+	Q = 3,  Z = 5,
 }
 ENT.SpriteMat = Material( "sprites/light_ignorez" )
 
@@ -133,6 +127,17 @@ ENT.TrafficLightModels[0] = {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(7.43,4.46,14)},
 				}
 				}},
+	X_glasses	= {
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(7.43,4.46,25)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(7.43,4.46,14)},
+		},
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(7.43,4.46,35.2)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(7.43,4.46,25)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(7.43,4.46,14)},
+		},
+	},
 
 	M = { Vector(0,0,24), "models/signals/msa/old_signals/standart/sign_3.mdl", {}, Vector(13.1,2, 19.5), 1.75, 2.05, 4},
 	arsletter = true,
@@ -180,7 +185,17 @@ ENT.TrafficLightModels[1] = {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,13.3,7.97 )},
 				}
 				} },
-
+	X_glasses	= {
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(0,13.3,19.95)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(0,13.3,7.97 )},
+		},
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(0,13.3,30.88)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(0,13.3,19.95)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(0,13.3,7.97 )},
+		},
+	},
 	["W"] = SpecialLensConfig,
 	["R"] = SpecialLensConfig,
 	["G"] = SpecialLensConfig,
@@ -234,7 +249,23 @@ ENT.TrafficLightModels[2] = {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(10.39,2.32,16)},
 				}
 				}},
-
+	X_glasses	= {
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,27.55)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,16)},
+		},
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,39.37)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,27.55)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,16)},
+		},
+		{
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,50.45)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,39.37)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,27.55)},
+			{"models/signals/msa/old_signals/standart/zag_old.mdl",Vector(10.39,2.32,16)},
+		},
+	},
 	M = { Vector(0,0,24), "models/signals/msa/old_signals/standart/sign_4.mdl", {}, Vector(13.8,2, 22.8), 1.8, 2.1, 4},
 }
 
@@ -243,29 +274,38 @@ ENT.TrafficLightModels[2] = {
 --------------------------------------------------------------------------------
 Metrostroi.SigTypeNames[3] = 'Dwarf'
 Metrostroi.SigTypeSpriteMul[3] = 0.75
-ENT.RenderOffset[3] = Vector(15,0,-3.85)
-if game.GetMap() == "gm_metro_minsk_1984" then ENT.RenderOffset[3] = Vector(0,0,3.85) end
+ENT.RenderOffset[3] = Vector(15,0,-2)
 ENT.TrafficLightModels[3] = {
-	name	= Vector(10.07-10,0.5+6,42.5),
-	name_one	= Vector(10.07-10,0.5+6,42.5),
-	[1]	= { Vector(15,0,0), "models/metrostroi/signals/mus/fixed_outside_2.mdl", {
-				[0] = Vector(10.07-10,-29.7+2.5,27.55+38.7),
-				[1] = Vector(10.07-10,-29.7+2.5,16+38.7),
+	name	= Vector(0,9.356,35),
+	[1]	= { Vector(0,0,0), "models/signals/msa/new_signals/small/light2_beton.mdl", {
+				[0] = Vector(0,-27,56.2),
+				[1] = Vector(0,-27,45.2),
 				["glass"]	= {
-					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(10.39-10,2.32+2.5,27.55+38.7)},
-					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(10.39-10,2.32+2.5,16+38.7)},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,56.2), 0.96},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,45.2), 0.96},
 				}
 				}},
-	[2]	= { Vector(15,0,0), "models/metrostroi/signals/mus/fixed_outside_3.mdl", {
-				[0] = Vector(10.07-10,-29.7+2.5,39.1+38.7),
-				[1] = Vector(10.07-10,-29.7+2.5,27.55+38.7),
-				[2] = Vector(10.07-10,-29.7+2.5,16+38.7),
+	[2]	= { Vector(0,0,0), "models/signals/msa/new_signals/small/light3_beton.mdl", {
+				[0] = Vector(0,-27,67.2),
+				[1] = Vector(0,-27,56.2),
+				[2] = Vector(0,-27,45.2),
 				["glass"]	= {
-					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(10.39-10,2.32+2.5,39.1+38.7)},
-					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(10.39-10,2.32+2.5,27.55+38.7)},
-					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(10.39-10,2.32+2.5,16+38.7)},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,67.2),0.963},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,56.2), 0.96},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,45.2),0.96},
 				}
 		}},
+	X_glasses	= {
+		{
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,56.2)},
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,45.2)},
+		},
+		{
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,67.2)},
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,56.2)},
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,45.2)},
+		},
+	},
 	noleft = true,
 }
 --------------------------------------------------------------------------------
@@ -292,7 +332,7 @@ ENT.TrafficLightModels[4] = {
 --------------------------------------------------------------------------------
 Metrostroi.SigTypeNames[5] = 'Virus New'
 Metrostroi.SigTypeSpriteMul[5] = 1
-ENT.RenderOffset[5] = Vector(1,0,103)
+ENT.RenderOffset[5] = Vector(0,0,103)
 ENT.TrafficLightModels[5] = {
 	m1	= "models/jar/ars_drossel.mdl",
 	m2	= "models/virus/new_signals/pole_2.mdl",
@@ -306,20 +346,20 @@ ENT.TrafficLightModels[5] = {
 	boxname = Vector(13.5,40,52.25),
 	stationboxoffset = Vector(13,38,50),
 	single	= { Vector(0,0,24), "models/virus/new_signals/light_single.mdl", {
-				[0] = Vector(7.22,-29.56,12.93),--
+				[0] = Vector(7.22,-29.56,12.93),
 				["glass"]	= {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(7.22,3,12.93)},
 				}
 			}},
 	[0]	= { Vector(0,0,24), "models/virus/new_signals/light_1.mdl", {
-				[0] = Vector(7.22,-29.56,12.93),--
+				[0] = Vector(7.22,-29.56,12.93),
 				["glass"]	= {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(7.22,3,12.93)},
 				}
 			}},
 	[1]	= { Vector(0,0,35), "models/virus/new_signals/light_2.mdl", {
 				[0] = Vector(7.22,-29.56,24.72),
-				[1] = Vector(7.22,-29.56,12.93),--
+				[1] = Vector(7.22,-29.56,12.93),
 				["glass"]	= {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(7.22,3,24.72)},
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(7.22,3,12.93)},
@@ -335,10 +375,57 @@ ENT.TrafficLightModels[5] = {
 					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(7.22,3,12.93)},
 				}
 				}},
-
+	X	= { Vector(0,0,46), "models/virus/new_signals/light_1.mdl", {
+			[0] = Vector(7.22,-29.56,12.93),---27.54
+			["glass"]	= {
+				{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(7.22,3,12.93)},
+			}
+		}
+	},
 	M = { Vector(0,0,24.5), "models/signals/msa/old_signals/virus/path_ind.mdl", {}, Vector(13.1,2, 19.5), 1.75, 2.05, 4},
+	M_double = { Vector(0,0,24.5), "models/signals/msa/old_signals/virus/path_ind_double.mdl", {}, Vector(13.1,2, 19.5), 1.75, 2.05, 4},
 	M_single = { Vector(0,0,24.5), "models/signals/msa/old_signals/virus/path_ind_single.mdl", {}},
 }
+--------------------------------------------------------------------------------
+-- Dwarf SPB
+--------------------------------------------------------------------------------
+Metrostroi.SigTypeNames[6] = 'Dwarf SPB'
+Metrostroi.SigTypeSpriteMul[6] = 0.75
+ENT.RenderOffset[6] = Vector(15,0,-2)
+ENT.TrafficLightModels[6] = {
+	name	= Vector(0,9.356,106.5),
+	[1]	= { Vector(0,0,0), "models/signals/msa/new_signals/small/light2_metal.mdl", {
+				[0] = Vector(0,-27,126.63),
+				[1] = Vector(0,-27,115.75),
+				["glass"]	= {
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,126.63), 0.96},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,115.75), 0.96},
+				}
+				}},
+	[2]	= { Vector(0,0,0), "models/signals/msa/new_signals/small/light3_metal.mdl", {
+				[0] = Vector(0,-27,138),
+				[1] = Vector(0,-27,127),
+				[2] = Vector(0,-27,116),
+				["glass"]	= {
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,138), 0.96},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,127), 0.96},
+					{"models/metrostroi/signals/mus/lamp_lens.mdl",Vector(0,6,116), 0.96},
+				}
+		}},
+	X_glasses	= {
+		{
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,126.63)},
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,115.75)},
+		},
+		{
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,138)},
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,127)},
+			{"models/signals/msa/old_signals/virus/zag_new.mdl",Vector(0,6,116)},
+		},
+	},
+	noleft = true,
+}
+
 
 ENT.SignalConverter = {
 	R = 1,
@@ -368,35 +455,9 @@ for i = 0,(#ENT.TrafficLightModels) do
 	--SERVER
 	ENT.TrafficLightModels[i].ArsBox = {model = "models/metrostroi/signals/mus/ars_box.mdl"}
 	ENT.TrafficLightModels[i].ArsBoxMittor = {model = "models/metrostroi/signals/mus/ars_box_mittor.mdl"}
-	if (game.GetMap() == "gm_metro_minsk_1984") then 
-		ENT.TrafficLightModels[i].ArsBox = {model = "models/mn_r/mn_r_joint1.mdl"} 
-		ENT.TrafficLightModels[i].ArsBoxMittor = {model = "models/mn_r/mn_r_joint2.mdl"}
-		ENT.TrafficLightModels[4].ArsBox = {model = "models/mn_r/mn_r_joint3.mdl"} 
-		ENT.TrafficLightModels[4].ArsBoxMittor = {model = "models/mn_r/mn_r_joint4.mdl"}
-		Metrostroi.SigTypeSpriteMul[1] = 1
-		Metrostroi.SigTypeSpriteMul[2] = 1
-		Metrostroi.SigTypeSpriteMul[3] = 1
-	end
 	
 	--CLIENT
 	ENT.BasePos[i] = ENT.BasePos[i] or ENT.BasePosition
-	ENT.TrafficLightModels[i].LampIndicatorOld = {
-		models = {
-			"models/metrostroi/signals/mus/light_lampindicator.mdl",
-			"models/metrostroi/signals/mus/light_lampindicator2.mdl",
-			"models/metrostroi/signals/mus/light_lampindicator3.mdl",
-			"models/metrostroi/signals/mus/light_lampindicator4.mdl",
-			"models/metrostroi/signals/mus/light_lampindicator5.mdl",
-			numb = "models/signals/msa/old_signals/old_ind/light_lampindicator_numb.mdl",
-			lamp = "models/signals/msa/old_signals/old_ind/light_lampindicator_lamp.mdl",
-		},
-		Vector(7.9), -- Indicator model offset if left
-		Vector(0), -- Indicator model offset
-		Vector(8), -- Sep (on short kron) Indicator model offset
-		Vector(-12,0,0), -- Sep (on short kron) Indicator model offset if left
-		Vector(3,0,3), -- Arrow offset
-		Vector(20,0,-12), -- Arrow offset if left
-	}
 	ENT.TrafficLightModels[i].LampIndicator = {
 		models = {
 			"models/metrostroi/signals/mus/light_lampindicator.mdl",

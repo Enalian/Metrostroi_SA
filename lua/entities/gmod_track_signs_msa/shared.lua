@@ -1,18 +1,4 @@
-if game.GetMap() ~= "gm_metro_minsk_1984" then 
-	if game.GetMap() ~= "gm_metro_u1" then
-		if game.GetMap() ~= "gm_metro_u5" then
-			if game.GetMap() ~= "gm_metro_u6" then
-				if game.GetMap() ~= "gm_berlin_u55" then
-					if game.GetMap() ~= "gm_metro_ndr_val_v2r1" then
-						timer.Simple(1, function()
-							scripted_ents.Alias ("gmod_track_signs", "gmod_track_signs_msa")
-						end)
-					else return end
-				else return end
-			else return end
-		else return end
-	else return end
-else return end
+if checkMSAblacklist() then return end
 ENT.Type            = "anim"
 
 ENT.PrintName       = "Sign"
@@ -327,14 +313,12 @@ ENT.SignModels[50] = {
 	angles = Angle(0,0,0),
 	noauto = true,
 }
---[[
-	ENT.SignModels[51] = {
-	model = "models/metrostroi/re_sign/x2/signal_outdoor_x2.mdl",
-	pos = Vector(0,100,50),
-	angles = Angle(0,90,0),
-	noauto = true,
+ENT.SignModels[51] = {
+model = "models/metrostroi/re_sign/x2/signal_outdoor_x2.mdl",
+pos = Vector(0,100,50),
+angles = Angle(0,90,0),
+noauto = true,
 }
-]]--
 ENT.SignModels[52] = {
 	model = "models/metrostroi/re_sign_n/3_train_r.mdl",
 	pos = Vector(0,80,150),
@@ -458,4 +442,142 @@ ENT.SignModels[71] = {
 	pos = Vector(0,0,-1),
 	angles = Angle(0,0,0),
 	noauto = true,
+}
+
+
+--Новые ТЭД
+ENT.SignModels[211] = {
+	model = "models/metrostroi/signs/tedoff_kn.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[213] = {
+	model = "models/metrostroi/signs/tedoff_p1.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[214] = {
+	model = "models/metrostroi/signs/tedoff_p2.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[215] = {
+	model = "models/metrostroi/signs/tedoff_pn.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[216] = {
+	model = "models/metrostroi/signs/tedoff_t1.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[217] = {
+	model = "models/metrostroi/signs/tedoff_t2.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[218] = {
+	model = "models/metrostroi/signs/tedoff_t3.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,-0),
+}
+ENT.SignModels[219] = {
+	model = "models/metrostroi/signs/tedoff_t4.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[220] = {
+	model = "models/metrostroi/signs/tedon_722_1.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[221] = {
+	model = "models/metrostroi/signs/tedon_722_2.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[222] = {
+	model = "models/metrostroi/signs/tedon_722_3.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[223] = {
+	model = "models/metrostroi/signs/tedon_722_4.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[224] = {
+	model = "models/metrostroi/signs/tedon_722_5.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[225] = {
+	model = "models/metrostroi/signs/tedon_722_6.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[226] = {
+	model = "models/metrostroi/signs/tedon_722_7.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[227] = {
+	model = "models/metrostroi/signs/tedon_722_8.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[228] = {
+	model = "models/metrostroi/signs/tedon_722_9.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[229] = {
+	model = "models/metrostroi/signs/tedon_722_10.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[230] = {
+	model = "models/metrostroi/signs/tedon_kn.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[232] = {
+	model = "models/metrostroi/signs/tedon_p1.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[233] = {
+	model = "models/metrostroi/signs/tedon_p2.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[234] = {
+	model = "models/metrostroi/signs/tedon_pn.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[235] = {
+	model = "models/metrostroi/signs/tedon_t1.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[236] = {
+	model = "models/metrostroi/signs/tedon_t2.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[237] = {
+	model = "models/metrostroi/signs/tedon_t3.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[238] = {
+	model = "models/metrostroi/signs/tedon_t4.mdl",
+	pos = Vector(0,90,112),
+	angles = Angle(0,270,0),
+}
+ENT.SignModels[241] = {
+	model = "models/signals/msa/new_signals/signs/sign_15.mdl",
+	pos = Vector(0,90,-10),
+	angles = Angle(0,270,0),
 }

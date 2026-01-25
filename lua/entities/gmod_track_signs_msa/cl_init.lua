@@ -1,18 +1,4 @@
-if game.GetMap() ~= "gm_metro_minsk_1984" then 
-	if game.GetMap() ~= "gm_metro_u1" then
-		if game.GetMap() ~= "gm_metro_u5" then
-			if game.GetMap() ~= "gm_metro_u6" then
-				if game.GetMap() ~= "gm_berlin_u55" then
-					if game.GetMap() ~= "gm_metro_ndr_val_v2r1" then
-						timer.Simple(1, function()
-							scripted_ents.Alias ("gmod_track_signs", "gmod_track_signs_msa")
-						end)
-					else return end
-				else return end
-			else return end
-		else return end
-	else return end
-else return end
+if checkMSAblacklist() then return end
 include("shared.lua")
 
 local debug = GetConVar("metrostroi_drawsignaldebug")
@@ -102,7 +88,8 @@ function ENT:Think()
 		local RAND = math.random(-10,10)
 		local pos = self.ModelProp.pos + self.Offset
 		local ang = self.ModelProp.angles
-		if not self.ModelProp.noauto then
+		
+		if not self.ModelProp.noauto and self.Type != 242 then
 			pos = pos+Vector(0,0,RAND/5)
 			if self.ModelProp.axis == 1 then
 				ang = ang+Angle(RAND,0,0)

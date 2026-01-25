@@ -1,22 +1,4 @@
-if game.GetMap() ~= "gm_metro_minsk_1984" then 
-	if game.GetMap() ~= "gm_metro_u1" then
-		if game.GetMap() ~= "gm_metro_u5" then
-			if game.GetMap() ~= "gm_metro_u6" then
-				if game.GetMap() ~= "gm_berlin_u55" then
-					if game.GetMap() ~= "gm_metro_ndr_val_v2r1" then
-						timer.Simple(1, function()  
-							scripted_ents.Alias ("gmod_track_signal", "gmod_track_signal_msa")
-						end)
-						timer.Simple(1, function()  
-							scripted_ents.Alias ("gmod_track_signs", "gmod_track_signs_msa")
-						end)
-
-					else return end
-				else return end
-			else return end
-		else return end
-	else return end
-else return end
+if checkMSAblacklist() then return end
 Metrostroi = Metrostroi or {}
 Metrostroi.RoutePointerFont = {
 	[""] = {

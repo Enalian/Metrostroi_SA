@@ -45,7 +45,7 @@ if not Metrostroi.Paths then
 
 	Metrostroi.OldUpdateTime = 0
 end
-Metrostroi.SignalVersion = 1.7
+Metrostroi.SignalVersion = 1.9
 
 --------------------------------------------------------------------------------
 -- Size of spatial cells into which all the 3D space is divided
@@ -503,7 +503,7 @@ function Metrostroi.ScanTrack(itype,node,func,x,dir,checked,startx,train)
 			local isolating = false
 			if IsValid(v) then
 				if light then
-					isolating = ((v.TrackDir == dir and not v.Routes[v.Route or 1].Repeater) or (v.TrackDir == dir and v.Routes[v.Route or 1].Repeater and tonumber(v.RouteNumber) == 9) or (tonumber(v.RouteNumber) ~= nil and v.Routes[v.Route or 1].Repeater)) and not v.PassOcc
+					isolating = (v.TrackDir == dir) and not v.PassOcc
 				end
 				if ars then
 					isolating = v.TrackDir == dir
@@ -1186,13 +1186,17 @@ function Metrostroi.Load(name,keep_signs)
 						ent.LensesStr = v.LensesStr
 						ent.Lenses = string.Explode("-",v.LensesStr)
 						ent.RouteNumber = v.RouteNumber
+                		ent.RouteUnused = v.RouteUnused
 						ent.IsolateSwitches = v.IsolateSwitches
 						ent.Routes = v.Routes
 						ent.ARSOnly = v.ARSOnly
+                		ent.BigLetter = v.BigLetter
 						ent.Left = v.Left
 						ent.Double = v.Double
 						ent.DoubleL = v.DoubleL
 						ent.Approve0 = v.Approve0
+						ent.RS_325Hz = v.RS_325Hz
+						ent.SPB_325Hz = v.SPB_325Hz
 						ent.TwoToSix = v.TwoToSix
 						ent.NonAutoStop = v.NonAutoStop
 						ent.PassOcc = v.PassOcc
@@ -1294,6 +1298,7 @@ function Metrostroi.Save(name)
 				BoxName = v.BoxName,
 				BoxNameStart = v.BoxNameStart,
 				StationTrack = v.StationTrack,
+                RouteUnused = v.RouteUnused,
 				RouteNumberSetup = v.RouteNumberSetup,
 				LensesStr = v.LensesStr,
 				RouteNumber =	v.RouteNumber,
@@ -1301,12 +1306,14 @@ function Metrostroi.Save(name)
 				ARSOnly = v.ARSOnly,
 				Routes = Routes,
 				Approve0 = v.Approve0,
+				RS_325Hz = v.RS_325Hz,
+				SPB_325Hz = v.SPB_325Hz,
 				TwoToSix = v.TwoToSix,
 				NonAutoStop = v.NonAutoStop,
+                BigLetter = v.BigLetter,
 				Left = v.Left,
 				Double = v.Double,
 				DoubleL = v.DoubleL,
-				AutoStop = v.AutoStop,
 				PassOcc = v.PassOcc,
 			})
 		end

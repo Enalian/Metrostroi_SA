@@ -46,7 +46,7 @@ if not Metrostroi.Paths then
 
     Metrostroi.OldUpdateTime = 0
 end
-Metrostroi.SignalVersion = 1.8
+Metrostroi.SignalVersion = 1.9
 
 --------------------------------------------------------------------------------
 -- Size of spatial cells into which all the 3D space is divided
@@ -580,7 +580,7 @@ function Metrostroi.ScanTrack(itype,node,func,x,dir,checked)
             local isolating = false
             if IsValid(v) then
                 if light then
-                    isolating = ((v.TrackDir == dir and not v.Routes[v.Route or 1].Repeater) or (v.TrackDir == dir and v.Routes[v.Route or 1].Repeater and tonumber(v.RouteNumber) == 9) or (tonumber(v.RouteNumber) ~= nil and v.Routes[v.Route or 1].Repeater)) and (not v.PassOcc or v.TrackX == x)
+                    isolating = ((v.TrackDir == dir and not v.Routes[v.Route or 1].Repeater) or (v.TrackDir == dir and v.Routes[v.Route or 1].Repeater and v.RouteUnused) or (v.RouteUnused and v.Routes[v.Route or 1].Repeater)) and (not v.PassOcc or v.TrackX == x)
                 end
                 if ars then
                     isolating = v.TrackDir == dir and (not v.PassOcc or v.TrackX == x)
@@ -1221,6 +1221,7 @@ local function loadSigns(name,keep)
         print("Metrostroi: This signs file is incompatible with signs version")
         signs = nil
     else
+        VersionSignal = version
         signs.Version = nil
     end
 
@@ -1248,13 +1249,17 @@ local function loadSigns(name,keep)
                 ent.LensesStr = v.LensesStr
                 ent.Lenses = string.Explode("-",v.LensesStr)
                 ent.RouteNumber = v.RouteNumber
+                ent.RouteUnused = v.RouteUnused
                 ent.IsolateSwitches = v.IsolateSwitches
                 ent.Routes = v.Routes
                 ent.ARSOnly = v.ARSOnly
                 ent.Left = v.Left
+                ent.BigLetter = v.BigLetter
                 ent.Double = v.Double
                 ent.DoubleL = v.DoubleL
                 ent.Approve0 = v.Approve0
+                ent.RS_325Hz = v.RS_325Hz
+                ent.SPB_325Hz = v.SPB_325Hz
                 ent.TwoToSix = v.TwoToSix
                 ent.NonAutoStop = v.NonAutoStop
                 ent.PassOcc = v.PassOcc
@@ -1380,26 +1385,40 @@ local function loadPAData(name)
     Metrostroi.PARebuildStations()
 end
 
-function Metrostroi.SpawnAutostop(pos,ang,siglink,maxspeed,etype)
+function Metrostroi.SpawnAutostop(Pos,Angles,SignalLink,MaxSpeed,Type)
     local ent = ents.Create("gmod_track_autostop_msa")
     if not IsValid(ent) then return end
-    ent:SetPos(pos)
-    ent:SetAngles(ang)
-    ent.SignalLink = siglink
-    ent.MaxSpeed = maxspeed
-	ent.Type = etype
+    ent:SetPos(Pos)
+    ent:SetAngles(Angles)
+    ent.SignalLink = SignalLink
+    ent.MaxSpeed = MaxSpeed
+	ent.Type = Type
     ent:Spawn()
     return ent
 end
 
-function Metrostroi.LoadAutostops(name,keep)
+function Metrostroi.LoadAutostops(name, keep)
     if keep then return end
-    for k,v in pairs(ents.FindByClass("gmod_track_autostop_msa"))do
+    for k, v in pairs(ents.FindByClass("gmod_track_autostop_msa")) do
         SafeRemoveEntity(v)
     end
-    local autostops = getFile("metrostroi_data/autostops_%s",name,"Autostops")
-    for k,v in pairs(autostops or empty_table)do
-        Metrostroi.SpawnAutostop(v[1],v[2],v[3],v[4],v[5])
+    local autostops = getFile("metrostroi_data/autostops_%s", name, "Autostops")
+    for k, v in pairs(autostops or empty_table) do
+        local pos, ang, sig, speed, etype
+        if v[1] ~= nil then 
+            pos   = v[1]
+            ang   = v[2]
+            sig   = v[3]
+            speed = v[4]
+            etype = v[5]
+        else
+            pos   = v.Pos
+            ang   = v.Angles
+            sig   = v.SignalLink
+            speed = v.MaxSpeed
+            etype = v.Type
+        end
+        Metrostroi.SpawnAutostop(pos, ang, sig, speed, etype)
     end
 end
 function Metrostroi.SpawnKGU(pos, ang, siglink, lense, speed)
@@ -1473,77 +1492,89 @@ function Metrostroi.Save(name)
     name = name or game.GetMap()
 
     -- Format signs, signal, switch data
-    local signs = {}
-    local signals_ents = ents.FindByClass("gmod_track_signal")
-    if not signals_ents then print("Metrostroi: Signs file is corrupted!") end
-    for k,v in pairs(signals_ents) do
-        if not Metrostroi.ARSSubSections[v] then
-            local Routes = table.Copy(v.Routes)
-            for k,v in pairs(Routes) do
-                v.LightsExploded = nil
-                v.IsOpened = nil
+        local signs = {}
+        local signals_ents = ents.FindByClass("gmod_track_signal")
+        if not signals_ents then print("Metrostroi: Signs file is corrupted!") end
+        
+        table.sort(signals_ents, function(a, b)
+            return a:EntIndex() < b:EntIndex()
+        end)
+        for k,v in ipairs(signals_ents) do
+            if not Metrostroi.ARSSubSections[v] then
+                local Routes = table.Copy(v.Routes)
+                for k,v in ipairs(Routes) do
+                    v.LightsExploded = nil
+                    v.IsOpened = nil
+                end
+                if v.RouteNumber == true then
+                    RNTemp = "0"
+                else
+                    RNTemp = ""
+                end
+                table.insert(signs,{
+                    Class = "gmod_track_signal",
+                    Pos = v:GetPos(),
+                    Angles = v:GetAngles(),
+                    SignalType = v.SignalType,
+                    Name = v.Name,
+                    BoxName = v.BoxName,
+                    BoxNameStart = v.BoxNameStart,
+                    StationTrack = v.StationTrack,
+                    RouteUnused = v.RouteUnused,
+                    RouteNumberSetup = v.RouteNumberSetup,
+                    LensesStr = v.LensesStr,
+                    RouteNumber =   v.RouteNumber,
+                    IsolateSwitches = v.IsolateSwitches,
+                    ARSOnly = v.ARSOnly,
+                    Routes = Routes,
+                    Approve0 = v.Approve0,
+                    RS_325Hz = v.RS_325Hz,
+                    SPB_325Hz = v.SPB_325Hz,
+                    TwoToSix = v.TwoToSix,
+                    NonAutoStop = v.NonAutoStop,
+                    BigLetter = v.BigLetter,
+                    Left = v.Left,
+                    Double = v.Double,
+                    DoubleL = v.DoubleL,
+                    PassOcc = v.PassOcc,
+                })
             end
+        end
+        local switch_ents = ents.FindByClass("gmod_track_switch")
+        for k,v in ipairs(switch_ents) do
             table.insert(signs,{
-                Class = "gmod_track_signal",
+                Class = "gmod_track_switch",
                 Pos = v:GetPos(),
                 Angles = v:GetAngles(),
-                SignalType = v.SignalType,
                 Name = v.Name,
-                BoxName = v.BoxName,
-				BoxNameStart = v.BoxNameStart,
-				StationTrack = v.StationTrack,
-                RouteNumberSetup = v.RouteNumberSetup,
-                LensesStr = v.LensesStr,
-                RouteNumber =   v.RouteNumber,
-                IsolateSwitches = v.IsolateSwitches,
-                ARSOnly = v.ARSOnly,
-                Routes = Routes,
-                Approve0 = v.Approve0,
-                TwoToSix = v.TwoToSix,
-                NonAutoStop = v.NonAutoStop,
-                Left = v.Left,
-                Double = v.Double,
-                DoubleL = v.DoubleL,
-                AutoStop = v.AutoStop,
-                PassOcc = v.PassOcc,
+                Channel = v:GetChannel(),
+                NotChangePos = v.NotChangePos,
+                LockedSignal = v.LockedSignal,
+                Invertred = v.Invertred,
             })
         end
-    end
-    local switch_ents = ents.FindByClass("gmod_track_switch")
-    for k,v in pairs(switch_ents) do
-        table.insert(signs,{
-            Class = "gmod_track_switch",
-            Pos = v:GetPos(),
-            Angles = v:GetAngles(),
-            Name = v.Name,
-            Channel = v:GetChannel(),
-            NotChangePos = v.NotChangePos,
-            LockedSignal = v.LockedSignal,
-            Invertred = v.Invertred,
-        })
-    end
-    local signs_ents = ents.FindByClass("gmod_track_signs")
-    for k,v in pairs(signs_ents) do
-        table.insert(signs,{
-            Class = "gmod_track_signs",
-            Pos = v:GetPos(),
-            Angles = v:GetAngles(),
-            SignType = v.SignType,
-            YOffset = v.YOffset,
-            ZOffset = v.ZOffset,
-            Left = v.Left,
-        })
-    end
-    signs.Version = Metrostroi.SignalVersion
-    -- Save data
-    print("Metrostroi: Saving signs and track definition...")
-    local data = util.TableToJSON(signs,true)
-    file.Write(string.format("metrostroi_data/signs_%s.txt",name),data)
-    print(Format("Saved to metrostroi_data/signs_%s.txt",name))
+        local signs_ents = ents.FindByClass("gmod_track_signs")
+        for k,v in ipairs(signs_ents) do
+            table.insert(signs,{
+                Class = "gmod_track_signs",
+                Pos = v:GetPos(),
+                Angles = v:GetAngles(),
+                SignType = v.SignType,
+                YOffset = v.YOffset,
+                ZOffset = v.ZOffset,
+                Left = v.Left,
+            })
+        end
+        signs.Version = Metrostroi.SignalVersion
+        -- Save data
+        print("Metrostroi: Saving signs and track definition...")
+        local data = util.TableToJSON(signs,true)
+        file.Write(string.format("metrostroi_data/signs_%s.txt",name),data)
+        print(Format("Saved to metrostroi_data/signs_%s.txt",name))
 
     local auto = {}
     local auto_ents = ents.FindByClass("gmod_track_autodrive_plate")
-    for k,v in pairs(auto_ents) do
+    for k,v in ipairs(auto_ents) do
         if not v.Linked then
             table.insert(auto,{
                 Pos = v:GetPos(),
@@ -1578,7 +1609,7 @@ function Metrostroi.Save(name)
         print("Metrostroi: Saving PAData definition...")
         local pa = table.Copy(Metrostroi.PAMConfTest)
         pa.markers = {}
-        for k,v in pairs(pa_ents) do
+        for k,v in ipairs(pa_ents) do
             if not v.UPPS and v.PAType == 1 then
                 table.insert(pa.markers,{
                     Pos = v:GetPos(),
@@ -1612,14 +1643,14 @@ function Metrostroi.Save(name)
 	local autostops = {}
     for k,v in pairs(ents.FindByClass("gmod_track_autostop_msa"))do
         if not IsValid(v) then continue end
-        table.insert(autostops,{[1] = v:GetPos(), [2] = v:GetAngles(), [3] = v.SignalLink, [4] = v.MaxSpeed, [5] = v.Type})
+        table.insert(autostops,{Pos = v:GetPos(), Angles = v:GetAngles(), SignalLink = v.SignalLink, MaxSpeed = v.MaxSpeed, Type = v.Type})
     end
     local data = util.TableToJSON(autostops,true)
     file.Write(string.format("metrostroi_data/autostops_%s.txt",name),data)
     print(Format("Saved to metrostroi_data/autostops_%s.txt",name))
 
     local kgu = {}
-    for k,v in pairs(ents.FindByClass("gmod_track_kgu_msa"))do
+    for k,v in ipairs(ents.FindByClass("gmod_track_kgu_msa"))do
         if not IsValid(v) then continue end
         table.insert(kgu,{
             [1] = v:GetPos(), 

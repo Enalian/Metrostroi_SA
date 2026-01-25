@@ -66,13 +66,13 @@ function ENT:SetState(state, suppress_chat)
     local sig_link = self:GetKGUSignalLink()
     local target_lense = self:GetKGULense()
     local signal_ent = Metrostroi.GetSignalByName(sig_link)
+    self:NotifyClients(state)
 
     if not state then
         if IsValid(signal_ent) and signal_ent.SetKGUOverride then
             signal_ent:SetKGUOverride(false)
         end
     else
-        if not suppress_chat then self:NotifyClients(true, "Сработало") end
         if IsValid(signal_ent) then
             if signal_ent.SetKGUOverride then
                 signal_ent:SetKGUOverride(true, target_lense)
@@ -82,16 +82,26 @@ function ENT:SetState(state, suppress_chat)
 end
 
 function ENT:CheckRaycast()
-    local direction = self:GetUp() 
-    local startPos = self:GetPos() + direction * 2
-    local length = 34
+    local height = 8  --смещение центра вверх
+    local side = -32 --смещение центра вправо
+    local startPos = self:GetPos() + (self:GetRight() * side) + (self:GetUp() * height)
+    local length = 64 --длина влево
+    local endPos = startPos + self:GetRight() * length
 
     local trace = util.TraceLine({
         start = startPos,
-        endpos = startPos + direction * length,
+        endpos = endPos,
         filter = self,
         mask = MASK_ALL 
     })
+
+    local lineContextColor = trace.Hit and Color(0, 0, 255) or Color(0, 255, 0)
+    debugoverlay.Line(startPos, trace.HitPos, 1, lineContextColor, true)
+    
+    if trace.Hit then
+        debugoverlay.Cross(trace.HitPos, 2, 0.1, Color(255, 255, 0), true)
+    end
+
     if IsValid(trace.Entity) then
         if not trace.Entity:IsPlayer() then
             if not self.Triggered then
@@ -100,6 +110,7 @@ function ENT:CheckRaycast()
         end
     end
 end
+
 
 function ENT:Think()
     if not self.Triggered then
@@ -110,14 +121,13 @@ function ENT:Think()
     return true
 end
 
-function ENT:NotifyClients(is_triggered, action)
+function ENT:NotifyClients(is_triggered)
     local link = self:GetKGUSignalLink()
     if link == "" or link == " " then return end
     
     net.Start("KGU_Chat_Trigger")
     net.WriteString(link)
     net.WriteBool(is_triggered)
-    net.WriteString(action)
     net.Broadcast()
 end
 

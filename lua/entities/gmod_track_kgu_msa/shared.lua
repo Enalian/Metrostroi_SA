@@ -8,7 +8,7 @@ ENT.Spawnable		= false
 ENT.AdminSpawnable	= false
 
 ENT.Model 			= "models/metrostroi/signals/mus/kgu_detector.mdl"
-
+ENT.PhysgunDisabled = true
 ENT.SignalLink 		= "" -- читофор, к которому привязана КГУ
 ENT.Lense 			= "0"  -- линзы которые будут включаться
 

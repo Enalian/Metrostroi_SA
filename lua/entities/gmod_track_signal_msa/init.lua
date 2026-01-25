@@ -1,18 +1,4 @@
-if game.GetMap() ~= "gm_metro_minsk_1984" then 
-	if game.GetMap() ~= "gm_metro_u1" then
-		if game.GetMap() ~= "gm_metro_u5" then
-			if game.GetMap() ~= "gm_metro_u6" then
-				if game.GetMap() ~= "gm_berlin_u55" then
-					if game.GetMap() ~= "gm_metro_ndr_val_v2r1" then
-                        timer.Simple(1, function()  
-                            scripted_ents.Alias ("gmod_track_signal", "gmod_track_signal_msa")
-                        end)
-					else return end
-				else return end
-			else return end
-		else return end
-	else return end
-else return end
+if checkMSAblacklist() then return end
 AddCSLuaFile("cl_font.lua")
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("shared.lua")
@@ -41,7 +27,7 @@ function ENT:OpenRoute(route)
 end
 
 function ENT:CloseRoute(route)
-	if self.Routes[route].Manual and self.Routes[route] then self.Routes[route].IsOpened = false end -- для ебучего nil
+	if self.Routes[route].Manual and self.Routes[route] then self.Routes[route].IsOpened = false end
 	if not self.Routes[route].Switches then return end
 
 	local Switches = string.Explode(",",self.Routes[route].Switches)
@@ -317,9 +303,9 @@ function ENT:PostInitalize()
 	else
 		self.GoodInvationSignal = -1
 	end
-	if self.Left and (self.SignalType ~= 4 and self.SignalType ~= 3) then
+	if self.Left and (self.SignalType != 4 and self.SignalType != 3 and self.SignalType != 6) then
 		self:SetModel("models/metrostroi/signals/mus/ars_box_mittor.mdl")
-	elseif self.SignalType == 4 or self.SignalType == 3 then
+	elseif self.SignalType == 4 or self.SignalType == 3 or self.SignalType == 6 then
 		self:SetModel("models/metrostroi_train/81-717/buttons_pam/pam_0.mdl")
 	else
 		self:SetModel("models/metrostroi/signals/mus/ars_box.mdl")
@@ -351,12 +337,12 @@ function ENT:GetRS()
 	--if self.ARSSpeedLimit == 1 or self.ARSSpeedLimit == 2 then return false end
 	if self.ARSSpeedLimit ~= 0 and self.ARSSpeedLimit== 2 then return false end
 	if self.ControllerLogic and self.ControllerLogicOverride325Hz then return self.Override325Hz end
-	return (self.ARSSpeedLimit > 4 or self.ARSSpeedLimit == 4 and self.Approve0) and (not self.ARSNextSpeedLimit or self.ARSNextSpeedLimit >= self.ARSSpeedLimit)
+	return (self.ARSSpeedLimit > 4 or self.ARSSpeedLimit == 4 and (self.RS_325Hz or self.Approve0)) and (not self.ARSNextSpeedLimit or self.ARSNextSpeedLimit >= self.ARSSpeedLimit)
 end
 
 function ENT:Get325HzAproove0()
 	if self.OverrideTrackOccupied or not self.ARSSpeedLimit then return false end
-	return self.ARSSpeedLimit == 0 and self.Approve0
+	return self.ARSSpeedLimit == 0 and (self.SPB_325Hz or self.Approve0)
 end
 
 function ENT:GetMaxARS()
@@ -378,7 +364,13 @@ end
 function ENT:CheckOccupation()
 	if not self.Close then --not self.OverrideTrackOccupied and
 		if self.Node and  self.TrackPosition then
-			self.Occupied,self.OccupiedBy,self.OccupiedByNow = Metrostroi.IsTrackOccupied(self.Node, self.TrackPosition.x,self.TrackPosition.forward,self.ARSOnly and "ars" or "light", self)
+			self.Occupied,self.OccupiedBy,self.OccupiedByNow = Metrostroi.IsTrackOccupied(
+				self.Node,
+				self.TrackPosition.x,
+				self.TrackPosition.forward,
+				self.ARSOnly and "ars" or "light",
+				self
+			)
 		end
 		if self.Routes[self.Route] and self.Routes[self.Route].Manual then
 			self.Occupied = self.Occupied or not self.Routes[self.Route].IsOpened
@@ -500,7 +492,9 @@ function ENT:ARSLogic(tim)
 			self.ARSNextSpeedLimit = IsValid(self.NextSignalLink) and self.NextSignalLink.ARSSpeedLimit or tonumber(ARSCodes[1])
 			self.ARSSpeedLimit = tonumber(ARSCodes[math.min(#ARSCodes, self.FreeBS+1)]) or 0
 			if self.AODisabled and self.ARSSpeedLimit ~= 2 then self.AODisabled = false end
-			if (self.InvationSignal or self.AODisabled) and self.ARSSpeedLimit == 2 then self.ARSSpeedLimit = 1 end
+			if (self.InvationSignal or self.AODisabled) and self.ARSSpeedLimit == 2 then 
+				self.ARSSpeedLimit = 0 self.SPB_325Hz = true 
+			end
 		end
 	end
 	if self.NextSignalLink ~= false and (self.Occupied or not self.NextSignalLink or not self.NextSignalLink.FreeBS) then
@@ -570,6 +564,7 @@ function ENT:Think(my)
 		self:SetNW2Bool("CurrentARS325_2",self:Get325HzAproove0())
 	end
 	if not self.ControllerLogic then
+		
 		if not self.Routes or #self.Routes == 0 then
 			ErrorNoHalt(Format("Metrostroi:Signal %s don't have a routes!\n",self.Name))
 			return
@@ -586,42 +581,40 @@ function ENT:Think(my)
 		--end
 		self.RouteNumberOverrite = nil
 		local number = ""
-		local numberold = ""
-		local RoutNumber = {
-			["0"] = "1",  ["1"] = "2",  ["2"] = "4",  ["3"] = "6",  ["4"] = "7",
-			["5"] = "8",  ["6"] = "9",  ["7"] = "10", ["8"] = "11", ["9"] = "12",
-			["A"] = "13", ["B"] = "14", ["V"] = "26", ["G"] = "18", ["D"] = "15",
-			["E"] = "16", ["I"] = "19", ["K"] = "20", ["M"] = "22", ["N"] = "23",
-			["P"] = "24", ["F"] = "17", ["R"] = "25", ["L"] = "21",
-			["Q"] = "3",  ["Z"] = "5", 
-		}
-		local function RoutNumberInd(ind_str)
-			if ind_str == nil then
-				return ""
-			end
-			local IndPr = ""
-			for i = 1, #ind_str do
-				local char = string.sub(ind_str, i, i)
-				IndPr = IndPr .. (RoutNumber[char] or char)
-			end
-			return IndPr
-		end
 		local IndValue = self.Routes[self.Route or 1].Ind or ""
 		local EnRouValue = self.Routes[self.Route or 1].EnRou or false
+		local NSRou = self.Routes[self.Route or 1].NSRou or ""
+		local NextSig = ""
+		if NSRou != "" then
+			NextSig = Metrostroi.SignalEntitiesByName[NSRou]
+		end
 		if self.MU or self.ARSOnly or (self.RouteNumberSetup and self.RouteNumberSetup ~= "") or (self.RouteNumber and self.RouteNumber ~= "") then
 			if self.NextSignalLink then
-				RouteSigPr = RoutNumberInd(self.RouteNumberOverriteRaw)
-				local NuRouFromNext = (self.NextSignalLink.RouteNumberOverriteRaw and self.NextSignalLink.RouteNumberOverriteRaw ~= "" and self.NextSignalLink.RouteNumberOverriteRaw ~= "-1")
-									and self.NextSignalLink.RouteNumberOverriteRaw or self.NextSignalLink.RouteNumber
-				if self.InvationSignal or (EnRouValue and not self.Red) or self.ARSOnly then
+				local MU_permission = self.InvationSignal or (EnRouValue and not self.Red) or self.ARSOnly
+				local RouteSigOverR = self.RouteNumberOverriteRaw
+				local NextRoutOverR = self.NextSignalLink.RouteNumberOverriteRaw
+				local NuRouFromNext = (NextRoutOverR and NextRoutOverR ~= "" and NextRoutOverR ~= "-1")
+									and NextRoutOverR or self.NextSignalLink.RouteNumber
+				if (MU_permission) and VersionSignal <= 1.87 then
 					local isNextEmpty = (NuRouFromNext == nil or NuRouFromNext == "" or NuRouFromNext == "-1")
 					if self.NextSignalLink.Red or isNextEmpty then
 						self.RouteNumberOverriteRaw = IndValue
 					else
 						self.RouteNumberOverriteRaw = NuRouFromNext
 					end
-					number = number..RouteSigPr
-					numberold = numberold .. (self.RouteNumberOverriteRaw or "")
+					number = number..self.RouteNumberOverriteRaw
+				elseif MU_permission then
+					if NSRou == "" or NextSig == nil or NextSig.Red then
+						number = number..IndValue
+					elseif (NextSig.ARSOnly == false or (NextSig.ARSSpeedLimit != 0 and NextSig.ARSSpeedLimit != 2)) and NextSig.Routes[NextSig.Route or 1].Ind != nil then
+						if NextSig.Routes[NextSig.Route or 1].Ind:lower() == "d" then
+							number = number..IndValue..NextSig.Routes[NextSig.Route or 1].Ind
+						else
+							number = number..NextSig.Routes[NextSig.Route or 1].Ind
+						end
+					else
+						number = number..IndValue
+					end
 				else
 					number = ""
 					self.RouteNumberOverriteRaw = self.RouteNumber
@@ -635,11 +628,9 @@ function ENT:Think(my)
 		
 		if self.InvationSignal and self.GoodInvationSignal == -1 then
 			number = number.."W"
-			numberold = numberold.."W"
 		end
-		if self.KGU then numberold = numberold.."k" end
+		if self.KGU then number = "k" end
 		if number then self:SetNW2String("Number",number) end
-		if numberold then self:SetNW2String("NumberOld",numberold) end
 		if self.Occupied ~= self.OccupiedOld then
 			hook.Run("Metrostroi.Signaling.ChangeRCState", self.Name, self.Occupied, self)
 			self.OccupiedOld = self.Occupied
@@ -696,7 +687,7 @@ function ENT:Think(my)
 		end
 		if self.KGUActive then
             self.ARSSpeedLimit = 0
-			self.Approve0 = true
+			self.SPB_325Hz = true
             local total_lenses = 0
             for _, v in ipairs(self.Lenses or {}) do 
                 if v ~= "M" then total_lenses = total_lenses + #v end
@@ -759,6 +750,7 @@ function ENT:SendUpdate(ply)
 		net.WriteString(self.ARSOnly and "ARSOnly" or self.LensesStr)
 		net.WriteString((self.SignalType == 0 or self.SignalType == 5) and self.RouteNumberSetup or "")
 		net.WriteBool(self.Left)
+		net.WriteBool(self.BigLetter)
 		net.WriteBool(self.Double)
 		net.WriteBool(self.DoubleL)
 		net.WriteBool(not self.NonAutoStop)
