@@ -13,7 +13,7 @@ local blackmaps = {
 function checkMSAblacklist()
     if table.HasValue(blackmaps, game.GetMap()) then return true end
     timer.Simple(1, function()
-        scripted_ents.Alias ("gmod_track_signal", "gmod_track_signal")
+        scripted_ents.Alias ("gmod_track_signal", "gmod_track_signal_msa")
         scripted_ents.Alias ("gmod_track_signs", "gmod_track_signs_msa")
     end)
 end
